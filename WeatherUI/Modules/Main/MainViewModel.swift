@@ -31,9 +31,15 @@ class MainViewModel: ObservableObject {
     func fetchWeather() {
         loadInProgress = true
         Task(priority: .high, operation: {
-            async let forecastResponse = await fetcher.fetchForecastAsync(cityId: currentCity.id)
-            async let currentWeatherResponse = await fetcher.fetchCurrentWeatherAsync(cityId: currentCity.id)
-            await setForecastData(forecastResponse: forecastResponse, currentWeatherResponse: currentWeatherResponse)
+                async let forecast = fetcher.fetchForecastAsync(cityId: currentCity.id)
+                async let currentWeather = fetcher.fetchCurrentWeatherAsync(cityId: currentCity.id)
+            do {
+                await setForecastData(forecast: try forecast,
+                                      currentWeather: try currentWeather)
+            }
+            catch {
+                print(error)
+            }
         })
     }
     
@@ -47,16 +53,12 @@ class MainViewModel: ObservableObject {
         fetchWeather()
     }
 
-    private func setForecastData(forecastResponse: Result<[Forecast], WeatherFetcherError>,
-                        currentWeatherResponse: Result<CurrentWeather, WeatherFetcherError>) async {
+    private func setForecastData(forecast: [Forecast],
+                                 currentWeather: CurrentWeather) async {
         await MainActor.run {
-            if case .success(let forecast) = forecastResponse {
-                forecastHelper.dateForWeatherItems(weathersList: forecast)
-                self.dailyForecast = self.createDailyForecast(forecastHelper.sortWeatherByDay(weatherList: forecast))
-            }
-            if case .success(let weather) = currentWeatherResponse {
-                self.nowForecast = weather
-            }
+            forecastHelper.dateForWeatherItems(weathersList: forecast)
+            self.dailyForecast = self.createDailyForecast(forecastHelper.sortWeatherByDay(weatherList: forecast))
+            self.nowForecast = currentWeather
             self.loadInProgress = false
         }
     }
