@@ -103,17 +103,17 @@ class CurrentWeather {
         self.timezone = timezone
     }
     
-    init(with weather: WeatherResponse) {
-        self.name = weather.weather.first?.main ?? ""
-        self.description = weather.weather.first?.description ?? ""
-        self.temperature = NSString(format:"%.1f", weather.main?.temp ?? 0) as String
-        self.feels = NSString(format:"%.1f", weather.main?.feels_like ?? 0) as String
-        self.humidity = weather.main?.humidity ?? 0
-        self.windSpeed = NSString(format:"%.1f", weather.wind?.speed ?? 0) as String
-        self.sunrise = weather.sys?.sunrise ?? 0
-        self.sunset = weather.sys?.sunset ?? 0
-        self.dateInt = weather.dt ?? 0
-        self.timezone = weather.timezone ?? 0
+    convenience init(with weather: WeatherResponse) {
+        self.init(name: weather.weather.first?.main ?? "",
+                  description: weather.weather.first?.description ?? "",
+                  temperature: NSString(format:"%.1f", weather.main?.temp ?? 0) as String,
+                  feels: NSString(format:"%.1f", weather.main?.feels_like ?? 0) as String,
+                  humidity: weather.main?.humidity ?? 0,
+                  windSpeed: NSString(format:"%.1f", weather.wind?.speed ?? 0) as String,
+                  sunrise: weather.sys?.sunrise ?? 0,
+                  sunset: weather.sys?.sunset ?? 0,
+                  dateInt: weather.dt ?? 0,
+                  timezone: weather.timezone ?? 0)
     }
 }
 

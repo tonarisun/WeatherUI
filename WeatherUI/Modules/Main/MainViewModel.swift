@@ -12,15 +12,18 @@ import Combine
 class MainViewModel: ObservableObject {
     private let fetcher: WeatherFetcher
     private let cityHelper: CityHelper
+    private let forecastHelper: ForecastHelper
+
     @Published var currentCity: City
     @Published var nowForecast: CurrentWeather?
     @Published var dailyForecast: [DailyForecast] = []
     @Published var loadInProgress: Bool = false
     
     init() {
-        loadInProgress = true
         fetcher = WeatherFetcher()
         cityHelper = CityHelper()
+        forecastHelper = ForecastHelper()
+        
         currentCity = cityHelper.cities.first(where: { $0.id == UserDefaults.currentCityId }) ?? City(id: 1235846, name: "Matara", state: "", country: "LK", coordinate: Coordinate(lat: 5.94851, lon: 80.535278))
         fetchWeather()
     }
@@ -28,34 +31,10 @@ class MainViewModel: ObservableObject {
     func fetchWeather() {
         loadInProgress = true
         Task(priority: .high, operation: {
-            let forecastResponse = await fetcher.fetchForecastAsync(cityId: currentCity.id)
-            let currentWeatherResponse = await fetcher.fetchCurrentWeatherAsync(cityId: currentCity.id)
-            await MainActor.run {
-                if case .success(let forecast) = forecastResponse {
-                    ForecastHelper.dateForWeatherItems(weathersList: forecast)
-                    self.dailyForecast = self.createDailyForecast(ForecastHelper.sortWeatherByDay(weatherList: forecast))
-                }
-                if case .success(let weather) = currentWeatherResponse {
-                    self.nowForecast = weather
-                }
-                self.loadInProgress = false
-            }
+            async let forecastResponse = await fetcher.fetchForecastAsync(cityId: currentCity.id)
+            async let currentWeatherResponse = await fetcher.fetchCurrentWeatherAsync(cityId: currentCity.id)
+            await setForecastData(forecastResponse: forecastResponse, currentWeatherResponse: currentWeatherResponse)
         })
-//        fetcher.fetchWeather(cityId: "\(currentCity.id)") { [weak self] forecast in
-//            guard let self = self else { return }
-//            let weather = CurrentWeather(with: forecast[0])
-            
-//            let day = Date.getTimeInt(date: weather.sunrise + weather.timezone)
-//            let night = Date.getTimeInt(date: weather.sunset + weather.timezone)
-//            CurrentCityTime.instance.day = ForecastHelper.correctTime(time: day)
-//            CurrentCityTime.instance.night = ForecastHelper.correctTime(time: night)
-//
-//            ForecastHelper.dateForWeatherItems(weathersList: forecast)
-//
-//            self.nowForecast = weather
-//            self.dailyForecast = self.createDailyForecast(ForecastHelper.sortWeatherByDay(weatherList: Array(forecast.dropFirst())))
-//            self.loadInProgress = false
-//        }
     }
     
     func searchCity() -> SearchContentView {
@@ -66,6 +45,20 @@ class MainViewModel: ObservableObject {
     func toggleUnits(isMetric: Bool) {
         UserDefaults.unitSystem = isMetric ? UnitSystem.metric.rawValue : UnitSystem.imperial.rawValue
         fetchWeather()
+    }
+
+    private func setForecastData(forecastResponse: Result<[Forecast], WeatherFetcherError>,
+                        currentWeatherResponse: Result<CurrentWeather, WeatherFetcherError>) async {
+        await MainActor.run {
+            if case .success(let forecast) = forecastResponse {
+                forecastHelper.dateForWeatherItems(weathersList: forecast)
+                self.dailyForecast = self.createDailyForecast(forecastHelper.sortWeatherByDay(weatherList: forecast))
+            }
+            if case .success(let weather) = currentWeatherResponse {
+                self.nowForecast = weather
+            }
+            self.loadInProgress = false
+        }
     }
 
     private func createDailyForecast(_ forecast: [Forecast]) -> [DailyForecast] {

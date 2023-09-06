@@ -22,12 +22,12 @@ class CurrentCityTime {
 
 class ForecastHelper {
     //MARK: - sortWeatherByDay
-    static func sortWeatherByDay(weatherList: [Forecast]?) -> [Forecast] {
+    func sortWeatherByDay(weatherList: [Forecast]?) -> [Forecast] {
         return weatherList?.filter({ ($0.timeInt >= 13 && $0.timeInt <= 15) || ($0.timeInt >= 1 && $0.timeInt <= 3) }) ?? []
     }
 
     //MARK: - correctTime
-    static func correctTime(time: Int) -> Int {
+    func correctTime(time: Int) -> Int {
         var tempTime = time
         if time < 0 {
              tempTime += 24
@@ -38,7 +38,7 @@ class ForecastHelper {
     }
 
     //MARK: - dateForWeatherItems
-    public static func dateForWeatherItems(weathersList: [Forecast]) {
+    func dateForWeatherItems(weathersList: [Forecast]) {
         weathersList.forEach { item in
             let time = item.dateInt + item.timezone
             let sunrise = Date.getTimeInt(date: item.sunrise + item.timezone)

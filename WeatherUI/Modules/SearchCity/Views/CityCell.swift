@@ -11,8 +11,8 @@ import SwiftUI
 
 struct CityCell: View {
     
-    let item: City
-    var action: (() -> Void)?
+    private let item: City
+    private var action: (() -> Void)?
     
     init(item: City, action: (() -> Void)?) {
         self.item = item

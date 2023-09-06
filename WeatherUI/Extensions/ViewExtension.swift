@@ -39,12 +39,12 @@ struct NavigationBarColor: ViewModifier {
 }
 
 extension View {
-    func makeCircle() -> some View {
+    func makeCircle(radius: Double = 40, color: Color = .dayBlue) -> some View {
         self
         .foregroundColor(.white)
-        .frame(width: 40, height: 40)
-        .buttonBorderShape(.roundedRectangle(radius: 20))
+        .frame(width: radius, height: radius)
+        .buttonBorderShape(.roundedRectangle(radius: radius / 2))
         .background(Color.dayBlue)
-        .cornerRadius(20)
+        .cornerRadius(radius / 2)
     }
 }

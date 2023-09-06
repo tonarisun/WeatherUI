@@ -16,7 +16,7 @@ class CityHelper {
         cities = fetch()
     }
     
-    func fetch() -> [City] {
+    private func fetch() -> [City] {
         do {
             if let bundlePath = Bundle.main.path(forResource: "city.list", ofType: "json") {
                 let fileUrl = URL(fileURLWithPath: bundlePath)
